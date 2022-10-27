@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configPath string
-
 func init() {
 	shackNetwork.AddCommand(shackNetworkCreate)
 	shackNetwork.AddCommand(shackNetworkCheck)

@@ -17,6 +17,7 @@ var Release struct {
 
 func init() {
 	shackCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "shack.yaml", "The path to the shack environment configuration")
+	shackCmd.PersistentFlags().BoolVarP(&debug, "debug", "v", false, "")
 	// Main function commands
 	shackCmd.AddCommand(shackExample)
 	shackCmd.AddCommand(shackNetwork)
@@ -33,7 +34,11 @@ var shackCmd = &cobra.Command{
 // Execute - starts the command parsing process
 func Execute() {
 	if err := shackCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		if debug {
+			fmt.Fprintf(os.Stderr, "%+v\n", err)
+		} else {
+			fmt.Fprintf(os.Stderr, err.Error())
+		}
 		os.Exit(1)
 	}
 }
@@ -64,3 +69,8 @@ var shackExample = &cobra.Command{
 		fmt.Print(network.ExampleConfig())
 	},
 }
+
+var (
+	configPath string
+	debug      bool
+)
