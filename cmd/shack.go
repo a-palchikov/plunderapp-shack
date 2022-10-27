@@ -27,8 +27,9 @@ func init() {
 
 // shackCmd is the parent command
 var shackCmd = &cobra.Command{
-	Use:   "shack",
-	Short: "This is a tool for building a deployment environment",
+	Use:          "shack",
+	Short:        "This is a tool for building a deployment environment",
+	SilenceUsage: true,
 }
 
 // Execute - starts the command parsing process
