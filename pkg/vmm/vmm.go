@@ -57,6 +57,7 @@ func Start(mac, uuid, nicPrefix string, foreground, vnc bool) error {
 	// in /tmp/qmp-uuid that we can use to manage the instance.
 	details, err := qemu.LaunchCustomQemu(context.Background(), "", params, nil, nil, nil)
 	if err != nil {
+		log.WithError(err).WithField("args", params).Debug("Failed to start qemu with params.")
 		return errors.Errorf("%v", details)
 	}
 

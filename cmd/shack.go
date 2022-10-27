@@ -17,7 +17,7 @@ var Release struct {
 
 func init() {
 	shackCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "shack.yaml", "The path to the shack environment configuration")
-	shackCmd.PersistentFlags().BoolVarP(&debug, "debug", "v", false, "")
+	shackCmd.PersistentFlags().BoolVarP(&debug, "debug", "l", false, "")
 	// Main function commands
 	shackCmd.AddCommand(shackExample)
 	shackCmd.AddCommand(shackNetwork)
