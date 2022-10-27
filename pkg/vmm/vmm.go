@@ -1,17 +1,16 @@
 package vmm
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
 	"time"
 
+	"github.com/kata-containers/govmm/qemu"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"context"
-
-	"github.com/intel/govmm/qemu"
 )
 
 // Machine data
@@ -22,7 +21,7 @@ import (
 
 // VMM - Virtual Machine Manager
 
-//Start w
+// Start w
 func Start(mac, uuid, nicPrefix string, foreground, vnc bool) error {
 	var vncPort int
 	params := make([]string, 0, 32)
@@ -58,7 +57,7 @@ func Start(mac, uuid, nicPrefix string, foreground, vnc bool) error {
 	// in /tmp/qmp-uuid that we can use to manage the instance.
 	details, err := qemu.LaunchCustomQemu(context.Background(), "", params, nil, nil, nil)
 	if err != nil {
-		return fmt.Errorf("%v", details)
+		return errors.Errorf("%v", details)
 	}
 
 	fmt.Printf("Network Device:\t%s-%s\nVM MAC Address:\t%s\nVM UUID:\t%s\n", nicPrefix, uuid, mac, uuid)
@@ -81,13 +80,13 @@ func Stop(uuid string) error {
 	// connect to the QMP socket and received the welcome message.
 	q, _, err := qemu.QMPStart(context.Background(), fmt.Sprintf("/tmp/qmp-%s", uuid), cfg, disconnectedCh)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return errors.WithStack(err)
 	}
 
 	// This has to be the first command executed in a QMP session.
 	err = q.ExecuteQMPCapabilities(context.Background())
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return errors.WithStack(err)
 	}
 
 	// Let's try to shutdown the VM.  If it hasn't shutdown in 10 seconds we'll
@@ -98,20 +97,19 @@ func Stop(uuid string) error {
 	if err != nil {
 		err = q.ExecuteQuit(context.Background())
 		if err != nil {
-			return fmt.Errorf("%v", err)
+			return errors.WithStack(err)
 		}
 	}
 
 	q.Shutdown()
 	err = os.Remove(fmt.Sprintf("/tmp/qmp-%s", uuid))
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
 
 func foreGroundRunner(params []string) error {
-
 	path := "qemu-system-x86_64"
 
 	/* #nosec */
@@ -120,19 +118,17 @@ func foreGroundRunner(params []string) error {
 
 	err := cmd.Start()
 	if err != nil {
-		return fmt.Errorf("Qemu error [%v]", err)
+		return errors.Wrap(err, "starting qemu")
 	}
-	log.Printf("Waiting for command to finish...")
+	log.Println("Waiting for command to finish...")
 	err = cmd.Wait()
 	if err != nil {
-		return fmt.Errorf("Shell error [%v]", err)
+		return errors.Wrap(err, "qemu run failed")
 	}
 	return nil
 }
 
 func vncPortGenerator() int {
 	rand.Seed(time.Now().UnixNano())
-	port := 1 + rand.Intn(10000-1)
-
-	return port
+	return 1 + rand.Intn(10000-1)
 }

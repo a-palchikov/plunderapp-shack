@@ -16,7 +16,7 @@ var Release struct {
 }
 
 func init() {
-
+	shackCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "shack.yaml", "The path to the shack environment configuration")
 	// Main function commands
 	shackCmd.AddCommand(shackExample)
 	shackCmd.AddCommand(shackNetwork)
@@ -24,7 +24,7 @@ func init() {
 	shackCmd.AddCommand(shackVersion)
 }
 
-//shackCmd is the parent command
+// shackCmd is the parent command
 var shackCmd = &cobra.Command{
 	Use:   "shack",
 	Short: "This is a tool for building a deployment environment",
@@ -33,28 +33,27 @@ var shackCmd = &cobra.Command{
 // Execute - starts the command parsing process
 func Execute() {
 	if err := shackCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
 	}
 }
 
-//// Sub commands
-
+// // Sub commands
 var shackVersion = &cobra.Command{
 	Use:   "version",
-	Short: "Version and Release information about the shack enviroment manager",
+	Short: "Version and Release information about the shack environment manager",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("shack Release Information\n")
-		fmt.Printf("Version:  %s\n", Release.Version)
-		fmt.Printf("Build:    %s\n", Release.Build)
+		fmt.Println("shack Release Information")
+		fmt.Println("Version:  ", Release.Version)
+		fmt.Println("Build:    ", Release.Build)
 	},
 }
 
 var shackNetwork = &cobra.Command{
 	Use:   "network",
-	Short: "Create the networking",
+	Short: "Manage networking",
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

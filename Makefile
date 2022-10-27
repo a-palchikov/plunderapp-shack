@@ -26,7 +26,7 @@ REPOSITORY = plndr
 all: check install
 
 $(TARGET): $(SRC)
-	@go build $(LDFLAGS) -o $(TARGET)
+	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(TARGET)
 
 build: $(TARGET)
 	@true
@@ -87,3 +87,6 @@ check:
 
 run: install
 	@$(TARGET)
+
+lint:
+	golangci-lint run

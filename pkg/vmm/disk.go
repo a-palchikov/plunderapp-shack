@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/pkg/errors"
 )
 
 // CreateDisk - will create a disk for a qemu instance
@@ -15,7 +17,7 @@ func CreateDisk(uuid, size string) error {
 	// If it doesn't exist then create it
 	if os.IsNotExist(err) {
 		if _, err := exec.Command("qemu-img", "create", "-f", "qcow2", imagePath, size).CombinedOutput(); err != nil {
-			return err
+			return errors.Wrapf(err, "creating disk at %s", imagePath)
 		}
 	}
 
@@ -30,8 +32,8 @@ func DeleteDisk(uuid string) error {
 	_, err := os.Stat(imagePath)
 	// If it doesn't exist then create it
 	if os.IsNotExist(err) {
-		return fmt.Errorf("The VM Disk [%s] does not exist", imagePath)
+		return errors.Errorf("VM Disk [%s] does not exist", imagePath)
 	}
 
-	return os.Remove(imagePath)
+	return errors.Wrap(os.Remove(imagePath), "removing disk")
 }

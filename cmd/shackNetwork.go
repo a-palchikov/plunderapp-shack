@@ -3,17 +3,14 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/plunder-app/shack/pkg/network"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var configPath string
 
 func init() {
-
-	shackNetwork.PersistentFlags().StringVarP(&configPath, "config", "c", "shack.yaml", "The path to the shack environment configuration")
-
 	shackNetwork.AddCommand(shackNetworkCreate)
 	shackNetwork.AddCommand(shackNetworkCheck)
 	shackNetwork.AddCommand(shackNetworkDelete)
@@ -22,83 +19,82 @@ func init() {
 
 var shackNetworkCheck = &cobra.Command{
 	Use:   "check",
-	Short: "check the bridge",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("shack Networking configuration\n")
-
+	Short: "Check the bridge",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("shack Networking configuration")
 		cfg, err := network.OpenFile(configPath)
 		if err != nil {
-			log.Fatal(err)
+			return errors.Wrap(err, "reading configuration")
 		}
 
 		err = cfg.CheckBridge()
 		if err != nil {
-			log.Warn(err)
+			return errors.Wrap(err, "validating the bridge")
 		}
-
+		return nil
 	},
 }
 
 var shackNetworkCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create the bridge",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("shack Networking configuration\n")
-
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("shack Networking configuration")
 		cfg, err := network.OpenFile(configPath)
 		if err != nil {
-			log.Fatal(err)
+			return errors.Wrap(err, "reading configuration")
 		}
 
 		err = cfg.CreateBridge()
 		if err != nil {
-			log.Warn(err)
+			return errors.Wrap(err, "creating the bridge")
 		}
 
 		err = cfg.AddBridgeAddress()
 		if err != nil {
-			log.Warn(err)
+			return errors.Wrap(err, "creating the bridge")
 		}
 
 		err = cfg.BridgeUp()
 		if err != nil {
-			log.Warn(err)
+			return errors.Wrap(err, "creating the bridge")
 		}
+		return nil
 	},
 }
 
 var shackNetworkDelete = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete the bridge",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Printf("shack Networking configuration\n")
 		cfg, err := network.OpenFile(configPath)
 		if err != nil {
-			log.Fatal(err)
+			return errors.Wrap(err, "reading configuration")
 		}
 
 		err = cfg.DeleteBridge()
 		if err != nil {
-			log.Warn(err)
+			return errors.Wrap(err, "deleting the bridge")
 		}
-
+		return nil
 	},
 }
 
 var shackNetworkNat = &cobra.Command{
 	Use:   "nat",
-	Short: "Enable Nat",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("shack Networking configuration\n")
+	Short: "Enable NAT",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("shack Networking configuration")
 		cfg, err := network.OpenFile(configPath)
 		if err != nil {
-			log.Fatal(err)
+			return errors.Wrap(err, "reading configuration")
 		}
 
 		err = cfg.EnableNat()
 		if err != nil {
-			log.Warn(err)
+			return errors.Wrap(err, "enabling NAT")
 		}
-
+		return nil
 	},
 }

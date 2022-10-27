@@ -1,12 +1,11 @@
 package network
 
 import (
-	"fmt"
-
+	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 )
 
-//CreateTap  will create a tap device for qemu
+// CreateTap will create a tap device for qemu
 func (e *Environment) CreateTap(tapName string) error {
 	// Find bridge
 	if e.BridgeLink == nil {
@@ -21,30 +20,29 @@ func (e *Environment) CreateTap(tapName string) error {
 	tap := &netlink.Tuntap{LinkAttrs: netlink.LinkAttrs{Name: tapName}, Mode: netlink.TUNTAP_MODE_TAP}
 	err := netlink.LinkAdd(tap)
 	if err != nil {
-		return fmt.Errorf("Could not add %s: %v", tap.Name, err)
+		return errors.Wrapf(err, "adding %s", tap.Name)
 	}
 
 	// Add Tap to bridge
 	err = netlink.LinkSetMaster(tap, e.BridgeLink)
 	if err != nil {
-		return fmt.Errorf("Could not add %s to bridge %s : %v", tap.Name, e.BridgeName, err)
+		return errors.Wrapf(err, "adding %s to bridge %s", tap.Name, e.BridgeName)
 	}
 	return nil
 }
 
-//DeleteTap  will remove a tap device from qemu and the bridge
+// DeleteTap will remove a tap device from qemu and the bridge
 func (e *Environment) DeleteTap(tapName string) error {
-
 	// Find Tap
 	tapLink, err := netlink.LinkByName(tapName)
 	if err != nil {
-		return fmt.Errorf("Could not delete %s: %v", tapName, err)
+		return errors.Wrapf(err, "deleting %s", tapName)
 	}
 
 	// Remove Tap device
 	err = netlink.LinkDel(tapLink)
 	if err != nil {
-		return fmt.Errorf("Could not delete %s: %v", tapName, err)
+		return errors.Wrapf(err, "deleting %s", tapName)
 	}
 	return nil
 

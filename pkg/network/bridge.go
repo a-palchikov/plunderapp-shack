@@ -1,19 +1,18 @@
 package network
 
 import (
-	"fmt"
 	"net"
 
+	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 )
 
 // CheckBridge will examine the bridge for its status
 func (e *Environment) CheckBridge() error {
-
 	if e.BridgeLink == nil {
 		bridge, err := netlink.LinkByName(e.BridgeName)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "looking for bridge")
 		}
 		e.BridgeLink = bridge
 	}
@@ -21,25 +20,25 @@ func (e *Environment) CheckBridge() error {
 
 	// Check Administrative state
 	if net.FlagUp&state.Flags == 0 {
-		return fmt.Errorf("Bridge exists, but is configured to a [down] state")
+		return errors.New("bridge exists, but is configured to a [down] state")
 	}
 
 	// Check the link state of bridge
 	switch state.OperState {
 	case netlink.OperDown:
-		return fmt.Errorf("Bridge exists, but Link is physically in a [down] state")
+		return errors.New("bridge exists, but Link is physically in a [down] state")
 	}
 
 	return nil
 }
 
-//CreateBridge will create a new Layer 2 bridge, and configure it
+// CreateBridge will create a new Layer 2 bridge, and configure it
 func (e *Environment) CreateBridge() error {
 	// Create the bridge
 	mybridge := &netlink.Bridge{LinkAttrs: netlink.LinkAttrs{Name: e.BridgeName}}
 	err := netlink.LinkAdd(mybridge)
 	if err != nil {
-		return fmt.Errorf("Could not add %s: %v", e.BridgeName, err)
+		return errors.Wrapf(err, "adding %s", e.BridgeName)
 	}
 	return nil
 }
@@ -49,13 +48,13 @@ func (e *Environment) DeleteBridge() error {
 	if e.BridgeLink == nil {
 		bridge, err := netlink.LinkByName(e.BridgeName)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "looking up bridge %s", e.BridgeName)
 		}
 		e.BridgeLink = bridge
 	}
 	err := netlink.LinkDel(e.BridgeLink)
 	if err != nil {
-		return fmt.Errorf("Could not delete %s: %v", e.BridgeName, err)
+		return errors.Wrapf(err, "deleting %s", e.BridgeName)
 	}
 
 	// Remove and reference to this bridge
@@ -68,19 +67,19 @@ func (e *Environment) AddBridgeAddress() error {
 	if e.BridgeLink == nil {
 		bridge, err := netlink.LinkByName(e.BridgeName)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "looking up bridge %s", e.BridgeName)
 		}
 		e.BridgeLink = bridge
 	}
 
 	addr, err := netlink.ParseAddr(e.BridgeAddress)
 	if err != nil {
-		return fmt.Errorf("Could not parse address %s: %v", e.BridgeAddress, err)
+		return errors.Wrapf(err, "parsing address %s", e.BridgeAddress)
 	}
 
 	err = netlink.AddrAdd(e.BridgeLink, addr)
 	if err != nil {
-		return fmt.Errorf("Could not add address %s to bridge %s: %v", e.BridgeAddress, e.BridgeName, err)
+		return errors.Wrapf(err, "adding address %s to bridge %s", e.BridgeAddress, e.BridgeName)
 	}
 
 	return nil
@@ -91,19 +90,19 @@ func (e *Environment) DelBridgeAddress() error {
 	if e.BridgeLink == nil {
 		bridge, err := netlink.LinkByName(e.BridgeName)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "looking up bridge %s", e.BridgeName)
 		}
 		e.BridgeLink = bridge
 	}
 
 	addr, err := netlink.ParseAddr(e.BridgeAddress)
 	if err != nil {
-		return fmt.Errorf("Could not parse address %s: %v", e.BridgeAddress, err)
+		return errors.Wrapf(err, "parsing address %s", e.BridgeAddress)
 	}
 
 	err = netlink.AddrDel(e.BridgeLink, addr)
 	if err != nil {
-		return fmt.Errorf("Could not del address %s on bridge %s: %v", e.BridgeAddress, e.BridgeName, err)
+		return errors.Wrapf(err, "deleting address %s on bridge %s", e.BridgeAddress, e.BridgeName)
 	}
 
 	return nil
@@ -114,9 +113,9 @@ func (e *Environment) BridgeUp() error {
 	if e.BridgeLink == nil {
 		bridge, err := netlink.LinkByName(e.BridgeName)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "looking up bridge %s", e.BridgeName)
 		}
 		e.BridgeLink = bridge
 	}
-	return netlink.LinkSetUp(e.BridgeLink)
+	return errors.Wrap(netlink.LinkSetUp(e.BridgeLink), "setting up bridge")
 }

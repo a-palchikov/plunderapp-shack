@@ -1,17 +1,15 @@
 package network
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 )
 
 // Environment defines the configuration of the shack environment
 type Environment struct {
-
 	// Host configuration
 	Interface string `json:"interface"`
 
@@ -30,34 +28,33 @@ type Environment struct {
 // OpenFile will open an file and parse the contents
 func OpenFile(path string) (*Environment, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return nil, fmt.Errorf("Unable to find file [%s]", path)
+		return nil, errors.Errorf("finding file at %q", path)
 	}
 
-	var e Environment
-
-	yamlFile, err := ioutil.ReadFile(path)
+	yamlFile, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("error: %v", err)
+		return nil, errors.Wrap(err, "reading file")
 	}
 
-	err = yaml.Unmarshal(yamlFile, &e)
+	var environ Environment
+	err = yaml.Unmarshal(yamlFile, &environ)
 	if err != nil {
-		return nil, fmt.Errorf("error: %v", err)
+		return nil, errors.Wrap(err, "unmarshalling YAML file")
 	}
 
-	return &e, nil
+	return &environ, nil
 }
 
 // ExampleConfig will return a config output
 func ExampleConfig() string {
-	cfg := Environment{}
-	cfg.Interface = "eth0"
-	cfg.BridgeAddress = "192.168.1.1/24"
-	cfg.BridgeName = "plunder"
-	cfg.NicPrefix = "plndrVM"
-	cfg.NicMacPrefix = "c0:ff:ee:"
+	cfg := Environment{
+		Interface:     "eth0",
+		BridgeAddress: "192.168.1.1/24",
+		BridgeName:    "plunder",
+		NicPrefix:     "plndrVM",
+		NicMacPrefix:  "c0:ff:ee:",
+	}
 
 	b, _ := yaml.Marshal(cfg)
-
 	return string(b)
 }
